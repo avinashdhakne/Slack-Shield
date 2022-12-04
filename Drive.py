@@ -1,5 +1,6 @@
 from System import system
 
+
 class drive(system):
 
     def __init__(self, drive) -> None:
@@ -27,7 +28,7 @@ class drive(system):
         return int.from_bytes(self.drive_object.read(1), "little")
 
     # Find the reserved sectors in the drive
-    def reserved_secotrs(self):
+    def reserved_sectors(self):
         self.drive_object.seek(14)
         return int.from_bytes(self.drive_object.read(2), "little")
 
@@ -51,17 +52,17 @@ class drive(system):
         self.drive_object.seek(36)
         return int.from_bytes(self.drive_object.read(4), "little")
 
-    # Find the Root dirctry cluster
+    # Find the Root directory cluster
     def root_cluster(self):
         self.drive_object.seek(44)
         return int.from_bytes(self.drive_object.read(4), "little")
 
     # Find the index of file allocation table
     def index_of_FAT(self):
-        return self.reserved_secotrs() * self.bytes_per_sector()
+        return self.reserved_sectors() * self.bytes_per_sector()
 
-    # Find the first index of root directry i.e. cluster 2
-    def index_of_root_directry(self):
+    # Find the first index of root directory i.e. cluster 2
+    def index_of_root_directory(self):
         FAT_bytes = self.sectors_per_FAT() * self.number_of_FAT() * \
             self.bytes_per_sector()
         return self.index_of_FAT() + FAT_bytes
@@ -72,26 +73,27 @@ class drive(system):
         # cluster 2
         size_of_root_directory = self.bytes_per_sector() * self.sectors_per_cluster()
 
-        # After root dirctory three clusters are reserved for
-        # - WPS setting i.e cluater 3
+        # After root directory three clusters are reserved for
+        # - WPS setting i.e cluster 3
         # - system volume information i.e. cluster 4
-        # - index volume guide i.e. cluater 5
-        size_of_reserved_clusters = (self.sectors_per_cluster() * self.bytes_per_sector()) * 3
+        # - index volume guide i.e. cluster 5
+        size_of_reserved_clusters = (
+            self.sectors_per_cluster() * self.bytes_per_sector()) * 3
 
         # First data cluster is cluster 6
-        return self.index_of_root_directry() + size_of_root_directory + size_of_reserved_clusters
+        return self.index_of_root_directory() + size_of_root_directory + size_of_reserved_clusters
 
 
 if __name__ == "__main__":
     file = drive("H")
     print(file.bytes_per_sector())
     print(file.sectors_per_cluster())
-    print(file.reserved_secotrs())
+    print(file.reserved_sectors())
     print(file.number_of_FAT())
     print(file.hidden_sectors())
     print(file.total_sectors())
     print(file.sectors_per_FAT())
     print(file.root_cluster())
     print(file.index_of_FAT())
-    print(file.index_of_root_directry())
+    print(file.index_of_root_directory())
     print(file.first_data_cluster())
