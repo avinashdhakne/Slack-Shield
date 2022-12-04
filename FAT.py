@@ -1,4 +1,6 @@
 from Drive import drive
+from tqdm import tqdm
+
 class FAT(drive):
     def __init__(self, drive) -> None:
         super().__init__(drive)
@@ -18,9 +20,10 @@ class FAT(drive):
         current_index = self.drive_object.tell()
 
         # Search FAT for clusters having slack spaces 
-        while(current_index < ending_index_of_FAT):
+        # while(current_index < ending_index_of_FAT):
+        for current_index in tqdm(range(starting_index_of_FAT, ending_index_of_FAT, 4)):
             FAT_entry = self.drive_object.read(4).hex()
-            print(current_index," < " ,ending_index_of_FAT, FAT_entry ,slacked_clusters)
+            # print(current_index," < " ,ending_index_of_FAT, FAT_entry ,slacked_clusters)
 
             # If the cluster is not pointing other cluster 
             if( FAT_entry == "ffffff0f"):
@@ -32,9 +35,6 @@ class FAT(drive):
 
             current_index =  self.drive_object.tell()
         return slacked_clusters
-
-
-        # while(self.drive_object.read(4) != )
 
 if __name__ == "__main__":
     fat = FAT("H")
