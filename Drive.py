@@ -1,11 +1,8 @@
-from System import system
+import psutil
 
 
-class drive(system):
-
+class Drive:
     def __init__(self, drive) -> None:
-        super().__init__()
-
         # Get the drive path
         self.drive_path = "\\\\.\\" + drive + ":"
 
@@ -17,83 +14,74 @@ class drive(system):
         except Exception as e:
             print(e)
 
-    # Find the bytes per sector in drive
-    def bytes_per_sector(self):
+    # Get the partition name and type
+    def partition_type(self):
+        for partition in psutil.disk_partitions():
+            print("Partition: " + partition.mountpoint, "Type: ",
+                  partition.fstype, partition.opts.split(",")[1])
+
+    # Get the memory status of partition
+    def partition_memory_status(self):
+        for partition in psutil.disk_partitions():
+            partition_data = psutil.disk_usage(partition.mountpoint)
+            print("Partition: ", partition.mountpoint,
+                  "Total Memory: ", partition_data.total)
+
+            bar = "█" * int((partition_data.percent/2)) + "-" * \
+                int((100 - partition_data.percent)/2)
+
+            print(f"|{bar}| Used: { partition_data.percent }%", end="\n\n")
+
+        # Find the bytes per sector in drive
+    def get_bytes_per_sector(self):
         self.drive_object.seek(11)
-        return int.from_bytes(self.drive_object.read(2), "little")
+        self.bytes_per_sector = int.from_bytes(
+            self.drive_object.read(2), "little")
+        return self.bytes_per_sector
 
     # Find the sectors per cluster in drive
-    def sectors_per_cluster(self):
+    def get_sectors_per_cluster(self):
         self.drive_object.seek(13)
-        return int.from_bytes(self.drive_object.read(1), "little")
+        self.sectors_per_cluster = int.from_bytes(
+            self.drive_object.read(1), "little")
+        return self.sectors_per_cluster
 
     # Find the reserved sectors in the drive
-    def reserved_sectors(self):
+    def get_reserved_sectors(self):
         self.drive_object.seek(14)
-        return int.from_bytes(self.drive_object.read(2), "little")
+        self.reserved_sectors = int.from_bytes(
+            self.drive_object.read(2), "little")
+        return self.reserved_sectors
 
     # Find the number of File allocation table in drive
-    def number_of_FAT(self):
+    def get_number_of_FAT(self):
         self.drive_object.seek(16)
-        return int.from_bytes(self.drive_object.read(1), "little")
+        self.number_of_FAT = int.from_bytes(
+            self.drive_object.read(1), "little")
+        return self.number_of_FAT
 
-    # Fine the hidden sectors i.e physical sectors before the drive starts
-    def hidden_sectors(self):
-        self.drive_object.seek(28)
-        return int.from_bytes(self.drive_object.read(4), "little")
+    # Get the volume name of the partition
+    def get_volume_name(self):
+        self.drive_object.seek(43)
+        self.volume_name = self.drive_object.read(11).decode()
+        return self.volume_name
 
-    # Find total sectors in drive
-    def total_sectors(self):
-        self.drive_object.seek(32)
-        return int.from_bytes(self.drive_object.read(4), "little")
-
-    # Find sectors per File Allocation table
-    def sectors_per_FAT(self):
-        self.drive_object.seek(36)
-        return int.from_bytes(self.drive_object.read(4), "little")
-
-    # Find the Root directory cluster
-    def root_cluster(self):
-        self.drive_object.seek(44)
-        return int.from_bytes(self.drive_object.read(4), "little")
-
-    # Find the index of file allocation table
-    def index_of_FAT(self):
-        return self.reserved_sectors() * self.bytes_per_sector()
-
-    # Find the first index of root directory i.e. cluster 2
-    def index_of_root_directory(self):
-        FAT_bytes = self.sectors_per_FAT() * self.number_of_FAT() * \
-            self.bytes_per_sector()
-        return self.index_of_FAT() + FAT_bytes
-
-    # Find the first file data cluster i.e. cluster 6
-    def first_data_cluster(self):
-
-        # cluster 2
-        size_of_root_directory = self.bytes_per_sector() * self.sectors_per_cluster()
-
-        # After root directory three clusters are reserved for
-        # - WPS setting i.e cluster 3
-        # - system volume information i.e. cluster 4
-        # - index volume guide i.e. cluster 5
-        size_of_reserved_clusters = (
-            self.sectors_per_cluster() * self.bytes_per_sector()) * 3
-
-        # First data cluster is cluster 6
-        return self.index_of_root_directory() + size_of_root_directory + size_of_reserved_clusters
+    # Get the file system of the partition
+    def get_file_system(self):
+        self.drive_object.seek(54)
+        self.file_system = self.drive_object.read(8).decode()
+        return self.file_system
 
 
 if __name__ == "__main__":
-    file = drive("H")
-    print(file.bytes_per_sector())
-    print(file.sectors_per_cluster())
-    print(file.reserved_sectors())
-    print(file.number_of_FAT())
-    print(file.hidden_sectors())
-    print(file.total_sectors())
-    print(file.sectors_per_FAT())
-    print(file.root_cluster())
-    print(file.index_of_FAT())
-    print(file.index_of_root_directory())
-    print(file.first_data_cluster())
+    sys = Drive("H")
+    sys.partition_type()
+    sys.partition_memory_status()
+
+    file = Drive("I")
+    print(file.get_bytes_per_sector())
+    print(file.get_sectors_per_cluster())
+    print(file.get_reserved_sectors())
+    print(file.get_number_of_FAT())
+    print(file.get_file_system())
+    print(file.get_volume_name())
