@@ -14,11 +14,20 @@ class Drive:
         except Exception as e:
             print(e)
 
-    # Get the partition name and type
-    def partition_type(self):
+     # Get the details of available partitions
+    def partition_details(self):
         for partition in psutil.disk_partitions():
             print("Partition: " + partition.mountpoint, "Type: ",
                   partition.fstype, partition.opts.split(",")[1])
+
+    # Get the partition type by its mount-point
+    def partition_type(self, partition):
+        partition_path = partition + ":\\"
+        partition_types = {}
+        for partition in psutil.disk_partitions():
+            partition_types.update({partition.mountpoint: partition.fstype})
+
+        return partition_types[partition_path]
 
     # Get the memory status of partition
     def partition_memory_status(self):
@@ -75,8 +84,11 @@ class Drive:
 
 if __name__ == "__main__":
     sys = Drive("H")
-    sys.partition_type()
+    print(sys.partition_type("C"))
+    print("\n\n\n")
     sys.partition_memory_status()
+    print("\n\n\n")
+    sys.partition_details()
 
     file = Drive("I")
     print(file.get_bytes_per_sector())
