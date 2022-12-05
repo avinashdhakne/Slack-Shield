@@ -71,7 +71,6 @@ class FAT32(Drive):
                     slacked_clusters.append(slacked_cluster_index)
 
             self.slacked_clusters_FAT32 = slacked_clusters
-
         return self.slacked_clusters_FAT32
 
     def get_cluster_data_FAT32(self, cluster_index):
@@ -92,20 +91,17 @@ class FAT32(Drive):
     def extract_slacked_cluster_FAT32(self):
         slacked_clusters_list = self.slacked_clusters_FAT32
         try:
-            file = open("Slack_Spaces.txt", "wb+")
+            file = open("Slack_Spaces_FAT32.txt", "wb+")
             for cluster_index in slacked_clusters_list:
                 cluster_data = self.get_cluster_data_FAT32(cluster_index)
-
                 file.write(b"\n\n Data from cluster: " + str(cluster_index).encode() + b"\n\n\n")
-                # cluster_header = b"Data from cluster: " + str(cluster_index).encode() + b"\n\n\n"                file.write(cluster_header)
-                # file.write(cluster_header)
                 file.write(cluster_data)
 
         except Exception as e:
             print(e)
 
         finally:
-            print("File Has been created...")
+            print("FAT32 File Has been created...")
             file.close()
 
 
@@ -119,4 +115,3 @@ if __name__ == "__main__":
     print(file.get_index_of_first_data_cluster_FAT32())
     print(file.get_slacked_clusters_FAT32())
     print(file.extract_slacked_cluster_FAT32())
-    # print(file.get_cluster_data_FAT32(8))
